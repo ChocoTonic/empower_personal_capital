@@ -78,6 +78,38 @@ def test_login_reports_identification_failure(session):
         PersonalCapital().login("user@example.com", "secret")
 
 
+def test_login_rejects_unknown_authentication_level(session):
+    session.get.return_value = response(text=f"window.csrf ='{CSRF}'")
+    session.post.return_value = response(
+        payload={"spHeader": {"csrf": CSRF, "authLevel": "UNKNOWN_LEVEL"}}
+    )
+
+    with pytest.raises(LoginFailedException, match="Unsupported authentication level"):
+        PersonalCapital().login("user@example.com", "secret")
+
+
+@pytest.mark.parametrize(
+    "payload, message",
+    [
+        ({}, "Password authentication failed"),
+        ({"spHeader": {"success": False}}, "Password authentication failed"),
+        (
+            {"spHeader": {"success": False, "errors": [{"message": "Bad credentials"}]}},
+            "Bad credentials",
+        ),
+    ],
+)
+def test_login_rejects_failed_or_malformed_password_response(session, payload, message):
+    session.get.return_value = response(text=f"window.csrf ='{CSRF}'")
+    session.post.side_effect = [
+        response(payload={"spHeader": {"csrf": CSRF, "authLevel": "USER_REMEMBERED"}}),
+        response(payload=payload),
+    ]
+
+    with pytest.raises(LoginFailedException, match=message):
+        PersonalCapital().login("user@example.com", "secret")
+
+
 def test_login_failed_exception_is_exported():
     from personalcapital import LoginFailedException as PublicLoginFailedException
 

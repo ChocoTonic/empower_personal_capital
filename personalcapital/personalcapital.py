@@ -31,10 +31,11 @@ def getSpHeaderValue(result, valueKey):
 
 
 def getErrorValue(result):
-    try:
-        return getSpHeaderValue(result, ERRORS_KEY)[0]["message"]
-    except (ValueError, IndexError):
+    errors = getSpHeaderValue(result, ERRORS_KEY)
+    if not isinstance(errors, list) or not errors or not isinstance(errors[0], dict):
         return None
+    message = errors[0].get("message")
+    return message if isinstance(message, str) else None
 
 
 class AuthLevelEnum(object):
@@ -79,8 +80,8 @@ class PersonalCapital(object):
         result = self.__authenticate_password(password).json()
         if getSpHeaderValue(result, AUTH_LEVEL_KEY) == AuthLevelEnum.MFA_REQUIRED:
             raise RequireTwoFactorException()
-        if getSpHeaderValue(result, SUCCESS_KEY) is False:
-            raise LoginFailedException(getErrorValue(result))
+        if getSpHeaderValue(result, SUCCESS_KEY) is not True:
+            raise LoginFailedException(getErrorValue(result) or "Password authentication failed")
 
     def authenticate_password(self, password):
         return self.__authenticate_password(password)
@@ -88,14 +89,16 @@ class PersonalCapital(object):
     def two_factor_authenticate(self, mode, code):
         if mode == TwoFactorVerificationModeEnum.SMS:
             return self.__authenticate_sms(code)
-        elif mode == TwoFactorVerificationModeEnum.EMAIL:
+        if mode == TwoFactorVerificationModeEnum.EMAIL:
             return self.__authenticate_email(code)
+        raise ValueError(f"Unsupported two-factor verification mode: {mode}")
 
     def two_factor_challenge(self, mode):
         if mode == TwoFactorVerificationModeEnum.SMS:
             return self.__challenge_sms()
-        elif mode == TwoFactorVerificationModeEnum.EMAIL:
+        if mode == TwoFactorVerificationModeEnum.EMAIL:
             return self.__challenge_email()
+        raise ValueError(f"Unsupported two-factor verification mode: {mode}")
 
     def fetch(self, endpoint, data=None):
         """
