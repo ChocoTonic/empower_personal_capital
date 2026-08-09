@@ -1,5 +1,4 @@
 import getpass
-import json
 import logging
 import os
 from datetime import datetime, timedelta
@@ -13,33 +12,6 @@ from personalcapital import (
 )
 
 load_dotenv()
-
-
-class PewCapital(PersonalCapital):
-    """
-    Extends PersonalCapital to save and load session
-    So that it doesn't require 2-factor auth every time
-    """
-
-    def __init__(self):
-        PersonalCapital.__init__(self)
-        self.__session_file = "session.json"
-
-    def load_session(self):
-        try:
-            with open(self.__session_file) as data_file:
-                cookies = {}
-                try:
-                    cookies = json.load(data_file)
-                except ValueError as err:
-                    logging.error(err)
-                self.set_session(cookies)
-        except IOError as err:
-            logging.error(err)
-
-    def save_session(self):
-        with open(self.__session_file, "w") as data_file:
-            data_file.write(json.dumps(self.get_session()))
 
 
 def get_email():
@@ -62,8 +34,13 @@ def get_password():
 
 def main():
     email, password = get_email(), get_password()
-    pc = PewCapital()
-    pc.load_session()
+    pc = PersonalCapital()
+    try:
+        pc.load_session("session.json")
+    except FileNotFoundError:
+        logging.info("No saved session found")
+    except ValueError as error:
+        logging.warning("Ignoring invalid saved session: %s", error)
 
     try:
         pc.login(email, password)
@@ -91,7 +68,7 @@ def main():
             "component": "DATAGRID",
         },
     )
-    pc.save_session()
+    pc.save_session("session.json")
 
     accounts = accounts_response.json()["spData"]
     print("Networth: {0}".format(accounts["networth"]))
