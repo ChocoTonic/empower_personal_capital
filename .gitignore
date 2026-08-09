@@ -10,3 +10,8 @@ MANIFEST
 session.json
 .env
 *.egg-info/
+.coverage
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/

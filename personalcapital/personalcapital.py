@@ -3,7 +3,8 @@ import re
 import requests
 
 csrf_regexp = re.compile(r"window\.csrf\s*=\s*'([a-f0-9-]+)'")
-base_url = "https://home.personalcapital.com/"
+base_url = "https://pc-api.empower-retirement.com"
+login_url = base_url + "/page/login/goHome"
 api_endpoint = base_url + "/api"
 HEADERS = {
     "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"
@@ -32,6 +33,7 @@ def getErrorValue(result):
 
 class AuthLevelEnum(object):
     USER_REMEMBERED = "USER_REMEMBERED"
+    MFA_REQUIRED = "MFA_REQUIRED"
 
 
 class TwoFactorVerificationModeEnum(object):
@@ -54,18 +56,25 @@ class PersonalCapital(object):
         self.__csrf = ""
 
     def login(self, username, password):
-        initial_csrf = self.__get_csrf_from_home_page(base_url)
-        csrf, auth_level = self.__identify_user(username, initial_csrf)
+        initial_csrf = self.__get_csrf_from_home_page(login_url)
+        if initial_csrf is None:
+            raise LoginFailedException("Unable to extract initial CSRF token")
 
-        if csrf and auth_level:
-            self.__csrf = csrf
-            if auth_level != AuthLevelEnum.USER_REMEMBERED:
-                raise RequireTwoFactorException()
-            result = self.__authenticate_password(password).json()
-            if getSpHeaderValue(result, SUCCESS_KEY) == False:
-                raise LoginFailedException(getErrorValue(result))
-        else:
-            raise LoginFailedException()
+        csrf, auth_level = self.__identify_user(username, initial_csrf)
+        if csrf is None or auth_level is None:
+            raise LoginFailedException("Unable to identify user")
+
+        self.__csrf = csrf
+        if auth_level == AuthLevelEnum.MFA_REQUIRED:
+            raise RequireTwoFactorException()
+        if auth_level != AuthLevelEnum.USER_REMEMBERED:
+            raise LoginFailedException(f"Unsupported authentication level: {auth_level}")
+
+        result = self.__authenticate_password(password).json()
+        if getSpHeaderValue(result, AUTH_LEVEL_KEY) == AuthLevelEnum.MFA_REQUIRED:
+            raise RequireTwoFactorException()
+        if getSpHeaderValue(result, SUCCESS_KEY) is False:
+            raise LoginFailedException(getErrorValue(result))
 
     def authenticate_password(self, password):
         return self.__authenticate_password(password)

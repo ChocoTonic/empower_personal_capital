@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: "increase"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+    labels: ["dependencies"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      python-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+    labels: ["dependencies"]
+    groups:
+      github-actions-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
