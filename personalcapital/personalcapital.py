@@ -9,6 +9,7 @@ api_endpoint = base_url + "/api"
 HEADERS = {
     "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"
 }
+DEVICE_NAME = "Empower Personal Capital Python API"
 
 
 SP_HEADER_KEY = "spHeader"
@@ -193,7 +194,7 @@ class PersonalCapital(object):
     def __authenticate_password(self, passwd):
         data = {
             "bindDevice": "true",
-            "deviceName": "",
+            "deviceName": DEVICE_NAME,
             "redirectTo": "",
             "skipFirstUse": "",
             "skipLinkAccount": "false",
