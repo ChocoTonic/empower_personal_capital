@@ -1,4 +1,8 @@
+import json
+import os
 import re
+import tempfile
+from pathlib import Path
 
 import requests
 
@@ -10,6 +14,7 @@ HEADERS = {
     "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"
 }
 DEVICE_NAME = "Empower Personal Capital Python API"
+SESSION_SCHEMA_VERSION = 1
 
 
 SP_HEADER_KEY = "spHeader"
@@ -121,6 +126,42 @@ class PersonalCapital(object):
         sets the cookies (should be a dictionary)
         """
         self.__session.cookies = requests.utils.cookiejar_from_dict(cookies)
+
+    def save_session(self, filename):
+        """Persist cookies and CSRF state as versioned JSON with private permissions."""
+        path = Path(filename)
+        state = {
+            "version": SESSION_SCHEMA_VERSION,
+            "csrf": self.__csrf,
+            "cookies": self.get_session(),
+        }
+        file_descriptor, temporary_name = tempfile.mkstemp(
+            dir=path.parent, prefix=f".{path.name}.", suffix=".tmp", text=True
+        )
+        temporary_path = Path(temporary_name)
+        try:
+            with os.fdopen(file_descriptor, "w", encoding="utf-8") as session_file:
+                os.chmod(temporary_path, 0o600)
+                json.dump(state, session_file)
+            os.replace(temporary_path, path)
+        except Exception:
+            temporary_path.unlink(missing_ok=True)
+            raise
+
+    def load_session(self, filename):
+        """Restore cookies and CSRF state from a versioned JSON session file."""
+        with Path(filename).open(encoding="utf-8") as session_file:
+            state = json.load(session_file)
+
+        if not isinstance(state, dict) or state.get("version") != SESSION_SCHEMA_VERSION:
+            raise ValueError("Unsupported session file version")
+        if not isinstance(state.get("csrf"), str):
+            raise ValueError("Session file contains an invalid CSRF token")
+        if not isinstance(state.get("cookies"), dict):
+            raise ValueError("Session file contains invalid cookies")
+
+        self.set_session(state["cookies"])
+        self.__csrf = state["csrf"]
 
     def __get_csrf_from_home_page(self, url):
         r = self.__session.get(url, headers=HEADERS)

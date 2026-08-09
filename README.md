@@ -58,15 +58,20 @@ print('Net worth:', accounts['networth'])
 
 ### Session Persistence
 
-You can avoid having to enter 2FA every time by storing your session:
+You can avoid having to enter 2FA every time by storing your session. The
+session file contains authentication cookies, so keep it private and never
+commit it:
 
 ```python
-session = pc.get_session()
-# Save session to a file
+pc.save_session("session.json")
 
 # Later...
-pc.set_session(session)
+pc.load_session("session.json")
 ```
+
+Session files use versioned JSON and include both the cookies and CSRF token.
+New files are created with owner-only permissions on platforms that support
+POSIX file modes.
 
 See `main.py` for a complete script with persistent sessions.
 
