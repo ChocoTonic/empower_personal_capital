@@ -23,15 +23,14 @@ pip install empower_personal_capital
 Clone the repo:
 
 ```bash
-git clone https://github.com/ChocoTonic/personalcapital-py.git
-cd personalcapital-py
+git clone https://github.com/ChocoTonic/empower_personal_capital.git
+cd empower_personal_capital
 ```
 
 Install dependencies and the package:
 
 ```bash
-pip install -r requirements.txt
-python setup.py install
+pip install .
 ```
 
 ## Usage
