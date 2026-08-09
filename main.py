@@ -14,10 +14,6 @@ from personalcapital import (
 
 load_dotenv()
 
-# Python 2 and 3 compatibility
-if hasattr(__builtins__, "raw_input"):
-    input = raw_input
-
 
 class PewCapital(PersonalCapital):
     """
@@ -50,7 +46,8 @@ def get_email():
     email = os.getenv("PEW_EMAIL")
     if not email:
         print(
-            "You can set the environment variables for PEW_EMAIL and PEW_PASSWORD so the prompts don't come up every time"
+            "Set PEW_EMAIL and PEW_PASSWORD environment variables "
+            "to skip these prompts in future runs."
         )
         return input("Enter email:")
     return email
