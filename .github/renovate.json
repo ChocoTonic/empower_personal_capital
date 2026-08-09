@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommitTypeAll(deps)"
+  ],
+  "timezone": "America/Los_Angeles",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 10,
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "5 days",
+  "separateMinorPatch": false,
+  "transitiveRemediation": true,
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "platformAutomerge": false,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "minimumReleaseAge": null,
+    "schedule": ["at any time"]
+  },
+  "osvVulnerabilityAlerts": true,
+  "ignorePaths": ["**/.venv/**", "**/node_modules/**", "**/.history/**"],
+  "packageRules": [
+    {
+      "description": "Suppress major bumps globally; vulnerability alerts remain immediate.",
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
