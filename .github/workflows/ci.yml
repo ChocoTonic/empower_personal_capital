@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: empower-personal-capital-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-empower-personal-capital-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+      - run: uv sync --all-groups --locked
+      - name: Tests (accept no tests until the login regression PR merges)
+        run: |
+          set +e
+          uv run pytest --cov=personalcapital --cov-report=term-missing
+          ec=$?
+          [ $ec -eq 5 ] && exit 0
+          exit $ec
