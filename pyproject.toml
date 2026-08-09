@@ -33,6 +33,9 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "live: opt-in tests that authenticate against a real Empower account",
+]
 
 [tool.ruff]
 target-version = "py310"
