@@ -10,6 +10,7 @@ description = "A Python library for interacting with the Personal Capital API. E
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "certifi>=2026.10.19",
     "python-dotenv>=1.2.2,<2",
     "requests>=2.34.2,<3",
 ]

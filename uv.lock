@@ -245,6 +245,7 @@ name = "empower-personal-capital"
 version = "0.0.2"
 source = { editable = "." }
 dependencies = [
+    { name = "certifi" },
     { name = "python-dotenv" },
     { name = "requests" },
 ]
@@ -258,6 +259,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "certifi", specifier = ">=2026.10.19" },
     { name = "python-dotenv", specifier = ">=1.2.2,<2" },
     { name = "requests", specifier = ">=2.34.2,<3" },
 ]
